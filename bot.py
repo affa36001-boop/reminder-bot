@@ -9,9 +9,18 @@ from loguru import logger
 
 from config import settings
 from database.db import init_db
-from handlers import callbacks, create, list as list_h, settings as settings_h, start
+from handlers import callbacks, create, leads, list as list_h, settings as settings_h, start
 from services.scheduler import setup_scheduler
 from utils.logger import setup_logger
+
+
+async def _run_userbot_safe(bot: Bot) -> None:
+    """Запускает userbot так, чтобы его падение не уронило основной бот."""
+    from services.userbot import run_userbot
+    try:
+        await run_userbot(bot)
+    except Exception as e:
+        logger.error(f"Userbot упал: {e}")
 
 
 async def main() -> None:
@@ -27,11 +36,19 @@ async def main() -> None:
     dp.include_router(create.router)
     dp.include_router(list_h.router)
     dp.include_router(settings_h.router)
+    dp.include_router(leads.router)
     dp.include_router(callbacks.router)
 
     scheduler = setup_scheduler(bot)
     scheduler.start()
     logger.info("Scheduler started")
+
+    userbot_task = None
+    if settings.userbot_enabled:
+        userbot_task = asyncio.create_task(_run_userbot_safe(bot))
+        logger.info("Userbot enabled")
+    else:
+        logger.info("Userbot disabled (нет API_ID / API_HASH / TELETHON_SESSION в .env)")
 
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -39,6 +56,8 @@ async def main() -> None:
         await dp.start_polling(bot)
     finally:
         scheduler.shutdown(wait=False)
+        if userbot_task is not None:
+            userbot_task.cancel()
         await bot.session.close()
 
 

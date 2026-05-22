@@ -158,3 +158,44 @@ def settings_menu() -> InlineKeyboardMarkup:
     kb.button(text="🏷 Мои теги", callback_data="settings:tags")
     kb.adjust(1)
     return kb.as_markup()
+
+
+# ────── лиды и кодовые слова ──────
+
+def lead_card_actions(lead) -> InlineKeyboardMarkup:
+    """Кнопки управления лидом. Префикс callback: lead:<action>:<id>.
+
+    action: ans (ответил), call (созвонился), buy (купил),
+    nobuy (не купил), reset (вернуть в работу), del (удалить).
+    """
+    kb = InlineKeyboardBuilder()
+    ans = "✅ Ответил" if lead.answered else "💬 Ответил?"
+    call = "✅ Созвонился" if lead.called else "📞 Созвонился?"
+    kb.row(
+        InlineKeyboardButton(text=ans, callback_data=f"lead:ans:{lead.id}"),
+        InlineKeyboardButton(text=call, callback_data=f"lead:call:{lead.id}"),
+    )
+    buy = "💰 ✅ Купил" if lead.outcome == "bought" else "💰 Купил"
+    nobuy = "❌ ✅ Не купил" if lead.outcome == "not_bought" else "❌ Не купил"
+    kb.row(
+        InlineKeyboardButton(text=buy, callback_data=f"lead:buy:{lead.id}"),
+        InlineKeyboardButton(text=nobuy, callback_data=f"lead:nobuy:{lead.id}"),
+    )
+    last_row = []
+    if lead.outcome != "pending":
+        last_row.append(InlineKeyboardButton(text="↩️ В работу", callback_data=f"lead:reset:{lead.id}"))
+    last_row.append(InlineKeyboardButton(text="🗑 Удалить", callback_data=f"lead:del:{lead.id}"))
+    kb.row(*last_row)
+    return kb.as_markup()
+
+
+def code_words_kb(code_words) -> InlineKeyboardMarkup:
+    """Список кодовых слов с кнопками удаления + кнопка добавления."""
+    kb = InlineKeyboardBuilder()
+    for cw in code_words:
+        kb.row(
+            InlineKeyboardButton(text=f"🔑 {cw.word}", callback_data="cw:ignore"),
+            InlineKeyboardButton(text="🗑", callback_data=f"cw:del:{cw.id}"),
+        )
+    kb.row(InlineKeyboardButton(text="➕ Добавить слово", callback_data="cw:add"))
+    return kb.as_markup()

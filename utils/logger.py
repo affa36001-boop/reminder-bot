@@ -5,6 +5,12 @@ from config import settings
 
 
 def setup_logger() -> None:
+    # На Windows консоль по умолчанию cp1252 — кириллица в логах ломает вывод
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
     logger.remove()
     logger.add(sys.stdout, level=settings.log_level, colorize=True,
                format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "

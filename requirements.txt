@@ -7,3 +7,4 @@ python-dateutil==2.9.0
 pytz==2024.2
 python-dotenv==1.0.1
 loguru==0.7.2
+telethon==1.36.0
