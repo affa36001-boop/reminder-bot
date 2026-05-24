@@ -6,7 +6,7 @@
 from html import escape
 
 from aiogram import Router, F
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
@@ -14,12 +14,44 @@ from aiogram.types import CallbackQuery, Message
 from database.db import (add_code_word, delete_code_word, delete_lead, get_lead,
                          get_or_create_user, list_code_words, list_leads, update_lead)
 from keyboards.inline import code_words_kb, lead_card_actions
+from keyboards.reply import leads_menu
 
 router = Router(name="leads")
 
 
 class CodeWordFSM(StatesGroup):
     waiting_word = State()
+
+
+HELP_TEXT = (
+    "👋 <b>Бот учёта лидов.</b>\n\n"
+    "Userbot ловит входящие сообщения в твоей личке. Если в сообщении есть "
+    "одно из <b>кодовых слов</b> — фиксируется лид, и сюда приходит карточка "
+    "с кнопками этапов воронки.\n\n"
+    "<b>Что я умею:</b>\n"
+    "• 🔑 <b>Кодовые слова</b> — список слов кампаний (Chegirma и др.)\n"
+    "• 🎯 <b>Лиды</b> — карточки всех пойманных лидов\n"
+    "• 📊 <b>Отчёт</b> — сводка: пришло / ответили / созвон / купили\n\n"
+    "Команды: /report, /leads, /codewords, /cancel, /help."
+)
+
+
+@router.message(CommandStart())
+async def cmd_start(msg: Message) -> None:
+    await get_or_create_user(msg.from_user.id, msg.from_user.username)
+    await msg.answer(HELP_TEXT, reply_markup=leads_menu())
+
+
+@router.message(Command("help"))
+@router.message(F.text == "❓ Помощь")
+async def cmd_help(msg: Message) -> None:
+    await msg.answer(HELP_TEXT, reply_markup=leads_menu())
+
+
+@router.message(Command("cancel"))
+async def cmd_cancel(msg: Message, state: FSMContext) -> None:
+    await state.clear()
+    await msg.answer("❎ Отменено.", reply_markup=leads_menu())
 
 
 # ────── отображение карточки лида ──────

@@ -2,10 +2,9 @@
 
 Работает под личным аккаунтом владельца. Когда во входящем личном сообщении
 встречается одно из зарегистрированных кодовых слов — создаётся карточка лида,
-а владельцу в @-бот приходит уведомление с кнопками статусов.
+а владельцу приходит уведомление с кнопками статусов в бота учёта лидов.
 
-Если API-ключи или сессия не заданы в .env — модуль не запускается,
-основной бот продолжает работать как обычно.
+Если API-ключи, сессия или токен бота лидов не заданы — модуль не запускается.
 """
 from html import escape
 
@@ -27,8 +26,8 @@ def _match_code_word(text: str, words: list[str]) -> str | None:
     return None
 
 
-async def run_userbot(bot: Bot) -> None:
-    """Запускает Telethon-клиент и слушает входящие ЛС до отключения."""
+async def run_userbot(leads_bot: Bot) -> None:
+    """Запускает Telethon-клиент и шлёт карточки лидов в бот учёта лидов."""
     client = TelegramClient(
         StringSession(settings.telethon_session),
         settings.api_id,
@@ -70,7 +69,7 @@ async def run_userbot(bot: Bot) -> None:
 
         uname = f" @{username}" if username else ""
         try:
-            await bot.send_message(
+            await leads_bot.send_message(
                 me.id,
                 f"🎯 <b>Новый лид!</b>\n\n"
                 f"🔑 Кодовое слово: <b>{escape(matched)}</b>\n"
