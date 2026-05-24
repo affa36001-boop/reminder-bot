@@ -18,8 +18,6 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     reminders: Mapped[list["Reminder"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    code_words: Mapped[list["CodeWord"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    leads: Mapped[list["Lead"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Reminder(Base):
@@ -41,37 +39,3 @@ class Reminder(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped[User] = relationship(back_populates="reminders")
-
-
-class CodeWord(Base):
-    """Кодовое слово рекламной кампании. Лид фиксируется, если входящее сообщение его содержит."""
-    __tablename__ = "code_words"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    word: Mapped[str] = mapped_column(String(64))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-    user: Mapped[User] = relationship(back_populates="code_words")
-
-
-class Lead(Base):
-    """Лид, пойманный userbot'ом по кодовому слову во входящих ЛС."""
-    __tablename__ = "leads"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    code_word: Mapped[str] = mapped_column(String(64), index=True)
-    contact_id: Mapped[int] = mapped_column(BigInteger, index=True)
-    contact_name: Mapped[str] = mapped_column(String(128))
-    contact_username: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    first_message: Mapped[str] = mapped_column(Text)
-    # этапы воронки — независимые флаги
-    answered: Mapped[bool] = mapped_column(Boolean, default=False)
-    called: Mapped[bool] = mapped_column(Boolean, default=False)
-    # pending / bought / not_bought
-    outcome: Mapped[str] = mapped_column(String(16), default="pending", index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user: Mapped[User] = relationship(back_populates="leads")
