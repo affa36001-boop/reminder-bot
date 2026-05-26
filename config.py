@@ -12,6 +12,8 @@ class Settings:
     database_url: str
     default_timezone: str
     log_level: str
+    webapp_url: str | None
+    api_port: int
 
 
 def load_settings() -> Settings:
@@ -20,9 +22,11 @@ def load_settings() -> Settings:
         raise RuntimeError("BOT_TOKEN не задан в .env")
     return Settings(
         bot_token=token,
-        database_url=os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./reminders.db"),
+        database_url=os.getenv("DATABASE_URL", "sqlite+aiosqlite:////app/data/reminders.db"),
         default_timezone=os.getenv("DEFAULT_TIMEZONE", "Europe/Moscow"),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        webapp_url=os.getenv("WEBAPP_URL") or None,
+        api_port=int(os.getenv("API_PORT", "8080")),
     )
 
 
