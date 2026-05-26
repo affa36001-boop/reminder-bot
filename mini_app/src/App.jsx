@@ -37,6 +37,19 @@ export default function App() {
   useEffect(() => {
     tg?.ready()
     tg?.expand()
+
+    const tp = tg?.themeParams
+    if (tp) {
+      const root = document.documentElement
+      const set = (k, v) => v && root.style.setProperty(k, v)
+      set('--tg-theme-bg-color',           tp.bg_color)
+      set('--tg-theme-text-color',         tp.text_color)
+      set('--tg-theme-hint-color',         tp.hint_color)
+      set('--tg-theme-button-color',       tp.button_color)
+      set('--tg-theme-button-text-color',  tp.button_text_color)
+      set('--tg-theme-secondary-bg-color', tp.secondary_bg_color)
+    }
+
     loadReminders()
     loadTags()
   }, [])
@@ -91,6 +104,8 @@ export default function App() {
             timezone={data.timezone}
             onDone={handleDone}
             onDelete={handleDelete}
+            filter={filter}
+            onAdd={() => setShowAdd(true)}
           />
         )}
       </main>
